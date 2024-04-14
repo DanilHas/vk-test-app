@@ -1,35 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
+import {
+  AppRoot,
+  SplitLayout,
+  PanelHeader,
+  usePlatform,
+} from "@vkontakte/vkui";
+import "@vkontakte/vkui/dist/vkui.css";
+import { GetGroupsResponse } from "./types/Group";
+import GroupList from "./components/GroupList";
+import Filters from "./components/Filters";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [groupsData, setGroupsData] = useState<GetGroupsResponse | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("/api/groups");
+        const groups = await response.json();
+        setGroupsData({ result: 1, data: groups });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const platform = usePlatform();
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <AppRoot>
+      <SplitLayout
+        header={platform !== "vkcom" && <PanelHeader delimiter="none" />}
+        style={{ display: "flex", flexDirection: "column" }}
+      >
+        <Filters groupsData={groupsData?.data} />
+        <GroupList groupsData={groupsData?.data} />
+      </SplitLayout>
+    </AppRoot>
+  );
 }
 
-export default App
+export default App;
